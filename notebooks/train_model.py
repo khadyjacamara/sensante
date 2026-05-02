@@ -122,3 +122,29 @@ importances = model.feature_importances_
 for name, imp in sorted(zip(feature_cols, importances),
                         key=lambda x: x[1], reverse=True):
     print(f"  {name:20s} : {imp:.3f}")
+
+    # ===== EXERCICE 2 : TESTER 3 NOUVEAUX PATIENTS =====
+print(f"\n--- Exercice 2 : Test de 3 nouveaux patients ---")
+
+patients = [
+    {'age': 10, 'sexe': 'M', 'temperature': 36.5, 'tension_sys': 120,
+     'toux': False, 'fatigue': False, 'maux_tete': False, 'region': 'Dakar'},
+    {'age': 35, 'sexe': 'F', 'temperature': 40.2, 'tension_sys': 90,
+     'toux': True, 'fatigue': True, 'maux_tete': True, 'region': 'Ziguinchor'},
+    {'age': 70, 'sexe': 'M', 'temperature': 38.8, 'tension_sys': 140,
+     'toux': True, 'fatigue': True, 'maux_tete': False, 'region': 'Tambacounda'},
+]
+
+for i, patient in enumerate(patients, 1):
+    sexe_enc = le_sexe_loaded.transform([patient['sexe']])[0]
+    region_enc = le_region_loaded.transform([patient['region']])[0]
+    features = [
+        patient['age'], sexe_enc, patient['temperature'],
+        patient['tension_sys'], int(patient['toux']),
+        int(patient['fatigue']), int(patient['maux_tete']), region_enc
+    ]
+    diag = model_loaded.predict([features])[0]
+    proba = model_loaded.predict_proba([features])[0].max()
+    print(f"\nPatient {i} : {patient['sexe']}, {patient['age']} ans, "
+          f"temperature {patient['temperature']}C, region {patient['region']}")
+    print(f"  → Diagnostic : {diag} ({proba:.1%})")

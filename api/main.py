@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
@@ -20,6 +21,13 @@ class DiagnosticOutput(BaseModel):
     message: str
 
 app = FastAPI(title="SenSante API", version="0.2.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 print("Chargement du modele...")
 model = joblib.load("models/model.pkl")
@@ -48,3 +56,12 @@ def predict(patient: PatientInput):
     confiance = "haute" if proba_max >= 0.7 else "moyenne" if proba_max >= 0.4 else "faible"
     messages = {"palu": "Suspicion de paludisme. Consultez rapidement.", "grippe": "Suspicion de grippe. Repos et hydratation.", "typh": "Suspicion de typhoide. Consultation necessaire.", "sain": "Pas de pathologie detectee."}
     return DiagnosticOutput(diagnostic=diagnostic, probabilite=round(proba_max, 2), confiance=confiance, message=messages.get(diagnostic, "Consultez un medecin."))
+
+@app.get("/model-info")
+def model_info():
+    return {
+        "type": type(model).__name__,
+        "n_estimators": model.n_estimators,
+        "classes": list(model.classes_),
+        "n_features": model.n_features_in_
+    }

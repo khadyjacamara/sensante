@@ -38,12 +38,13 @@ class ExplainOutput(BaseModel):
 
 SYSTEM_PROMPT = """Tu es un assistant medical senegalais.
 Tu recois un diagnostic et des donnees patient.
-Explique le resultat en francais simple,
-comme un medecin parlerait a son patient.
+Explique le resultat en melant le francais et des mots wolof simples,
+comme un medecin parlerait a son patient au Senegal.
+Par exemple utilise : dafa dafa (c'est ca), dem (aller), xam (savoir),
+yaram (corps), feebar (maladie).
 Sois rassurant mais recommande toujours une consultation medicale.
 Maximum 3 phrases.
-Ne fais JAMAIS de diagnostic toi-meme.
-Tu expliques uniquement le diagnostic fourni."""
+Ne fais JAMAIS de diagnostic toi-meme."""
 
 
 app = FastAPI(title="SenSante API", version="0.2.0")
@@ -58,10 +59,10 @@ app.add_middleware(
 
 print("Chargement du modele...")
 
-model = joblib.load("models/model.pkl")
-le_sexe = joblib.load("models/encoder_sexe.pkl")
-le_region = joblib.load("models/encoder_region.pkl")
-feature_cols = joblib.load("models/feature_cols.pkl")
+model = joblib.load("model.pkl")
+le_sexe = joblib.load("encoder_sexe.pkl")
+le_region = joblib.load("encoder_region.pkl")
+feature_cols = joblib.load("feature_cols.pkl")
 
 print(f"Modele charge : {list(model.classes_)}")
 
@@ -206,3 +207,13 @@ def model_info():
         "classes": list(model.classes_),
         "n_features": model.n_features_in_
     }
+    
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Servir le frontend comme fichier statique
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+@app.get("/")
+def serve_frontend():
+    return FileResponse("frontend/index.html")
